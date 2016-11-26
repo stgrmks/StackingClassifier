@@ -15,7 +15,7 @@ class stacked_generalizer(object):
         self.layers = layers
         self.CV = CV
         
-    def __fit_layer(self, Y_dev, x_dev, x_test, learners):
+    def __fit_layer_cv(self, Y_dev, x_dev, x_test, learners):
         #generate bins
         skf = list(self.CV)
         
@@ -47,32 +47,48 @@ class stacked_generalizer(object):
         learner_names = [(type(learner).__name__+str(i)) for i, learner in enumerate(learners)]
         return pd.DataFrame(blend_train, columns = learner_names), pd.DataFrame(blend_test, columns = learner_names)
     
+    def __fit_layer(self, Y_dev, x_dev, x_test, learners):
+        # Pre-allocate the data
+        blend_test = np.zeros((x_test.shape[0], len(learners))) # Number of testing data x Number of classifiers
+        
+        # Each classifier will be trained and used for predicting test set
+        for j, learner in enumerate(learners):
+            print '>> model', j+1, type(learner).__name__
+                   
+            learner.fit(x_dev, Y_dev)
+            
+            # Storing predictions
+            blend_test[:, j] = learner.predict_proba(x_test)[:,1]
+        # Take the mean of the predictions of the cross validation set
+        learner_names = [(type(learner).__name__+str(i)) for i, learner in enumerate(learners)]
+        return pd.DataFrame(blend_test, columns = learner_names)
+
+    
     def fit(self, Y_train, x_train):
         for i, layer in enumerate(self.layers):
             if i+1 == len(self.layers): #compute every layer except for last one
                 break
             else:
                 print '> layer', i+1
-                layer_train, layer_test = self.__fit_layer(Y_train, x_train, self.x_test, self.layers[i])
+                layer_train, layer_test = self.__fit_layer_cv(Y_train, x_train, self.x_test, self.layers[i])
                 x_train, self.x_test = layer_train, layer_test
         self.x_fitted_train = x_train
         self.x_fitted_test = self.x_test
         self.Y_train = Y_train
-        return self
     
     def predict_proba(self, x_test):
+        print '> final layer'
         if len(self.layers[len(self.layers)-1]) == 1: #if last layer consist of exactly one learner....
             stacker = self.layers[len(self.layers)-1][0].fit(self.x_fitted_train, self.Y_train)
+            print '>> stacker model', type(stacker).__name__
             pred = stacker.predict_proba(self.x_fitted_test)[:, 1]
         else: #...else compute avg of all learners in last layer
-            self.x_fitted_dev, self.x_fitted_test = self.__fit_layer(self.Y_train, self.x_fitted_train, self.x_fitted_test, self.layers[len(self.layers)-1])
+            print '>> averaging over', [type(learner).__name__ for learner in self.layers[len(self.layers) - 1]]
+            self.x_fitted_test = self.__fit_layer(self.Y_train, self.x_fitted_train, self.x_fitted_test, self.layers[len(self.layers)-1])
             pred = self.x_fitted_test.mean(axis = 1)
         return pred
         
    
 
-
-    
-    
 
 
