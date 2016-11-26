@@ -6,7 +6,7 @@ Created on Sat Nov 26 13:01:51 2016
 @author: markus
 """
 import sys
-sys.path.append("..") #include higher directory to python modules path
+sys.path.append('..') # include higher directory to python modules path
 import gc
 import numpy as np
 import pandas as pd
@@ -16,7 +16,7 @@ from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn import metrics
 from multi_stacker import stacked_generalizer
 
-#get some data & split into training and validation set
+# get some data & split into training and validation set
 numeric_cols = [ 'L1_S24_F1846', 'L3_S32_F3850', 'L1_S24_F1695', 'L1_S24_F1632',
                      'L3_S33_F3855', 'L1_S24_F1604',
                      'L3_S29_F3407', 'L3_S33_F3865',
@@ -36,7 +36,7 @@ Y_test = Y.iloc[val_cutoff:]
 del x, Y
 gc.collect()
 
-#models
+# models
 prior = np.sum(Y_dev) / (1.*len(Y_dev))
 layers = [
             [
