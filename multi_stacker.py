@@ -7,53 +7,7 @@ Created on Thu Nov 24 12:31:31 2016
 """
 
 import numpy as np
-import gc
 import pandas as pd
-from sklearn.cross_validation import StratifiedKFold
-import xgboost as xgb
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
-from sklearn import metrics
-
-
-
-#get some data & split into training and validation set
-numeric_cols = [ 'L1_S24_F1846', 'L3_S32_F3850', 'L1_S24_F1695', 'L1_S24_F1632',
-                     'L3_S33_F3855', 'L1_S24_F1604',
-                     'L3_S29_F3407', 'L3_S33_F3865',
-                     'L3_S38_F3952', 'L1_S24_F1723',
-                     ]
-
-x = pd.read_csv('train_numeric.csv', usecols = numeric_cols).fillna(6666666).astype(np.float32)
-#x_test = pd.read_csv('test_numeric.csv', usecols = numeric_cols).fillna(6666666).astype(np.float32)
-Y = pd.read_csv('train_numeric.csv', usecols = ['Response'])['Response'].astype(np.int8)
-shuffle_idx = np.random.permutation(Y.shape[0])
-Y = Y.iloc[shuffle_idx]
-x = x.iloc[shuffle_idx]
-val_cutoff = int(len(Y) * 9/10)
-x_dev = x.iloc[:val_cutoff]
-Y_dev = Y.iloc[:val_cutoff]
-x_test = x.iloc[val_cutoff:]
-Y_test = Y.iloc[val_cutoff:]
-del x, Y
-gc.collect()
-
-#models
-prior = np.sum(Y_dev) / (1.*len(Y_dev))
-layers = [
-            [
-            RandomForestClassifier(n_estimators = 4, max_features = 0.95, criterion = 'entropy', max_depth = 2, class_weight = 'balanced', n_jobs = -1, random_state = None),
-            RandomForestClassifier(n_estimators = 4, max_features = 0.95, criterion = 'entropy', max_depth = 7, class_weight = 'balanced', n_jobs = -1, random_state = None),
-            xgb.XGBClassifier(colsample_bytree = 0.85, learning_rate = 0.1, min_child_weight = 2, n_estimators = 4, subsample = 0.7, max_depth = 10, base_score = prior, missing = 6666666),
-            ],
-            [
-            RandomForestClassifier(n_estimators = 1, max_features = 0.95, criterion = 'entropy', max_depth = 5, class_weight = 'balanced', n_jobs = -1, random_state = None),
-            xgb.XGBClassifier(colsample_bytree = 0.85, learning_rate = 0.1, min_child_weight = 2.0, n_estimators = 1, subsample = 0.7, max_depth = 10, base_score = prior, missing = 6666666),
-            ],   
-            [
-            xgb.XGBClassifier(colsample_bytree = 0.85, learning_rate = 0.1, min_child_weight = 2.0, n_estimators = 5, subsample = 0.7, max_depth = 2, base_score = prior, missing = 6666666),
-            ]   
-        ]
-
 
 class stacked_generalizer(object):
     def __init__(self, x_test, layers = [], CV = []):
@@ -103,34 +57,19 @@ class stacked_generalizer(object):
                 x_train, self.x_test = layer_train, layer_test
         self.x_fitted_train = x_train
         self.x_fitted_test = self.x_test
-        self.Y_train = Y_dev
+        self.Y_train = Y_train
         return self
     
     def predict_proba(self, x_test):
-        if len(layers[len(layers)-1]) == 1: #if last layer consist of exactly one learner....
-            stacker = layers[len(layers)-1][0].fit(self.x_fitted_train, self.Y_train)
+        if len(self.layers[len(self.layers)-1]) == 1: #if last layer consist of exactly one learner....
+            stacker = self.layers[len(self.layers)-1][0].fit(self.x_fitted_train, self.Y_train)
             pred = stacker.predict_proba(self.x_fitted_test)[:, 1]
         else: #...else compute avg of all learners in last layer
-            self.x_fitted_dev, self.x_fitted_test = self.__fit_layer(self.Y_train, self.x_fitted_train, self.x_fitted_test, self.layers[len(layers)-1])
+            self.x_fitted_dev, self.x_fitted_test = self.__fit_layer(self.Y_train, self.x_fitted_train, self.x_fitted_test, self.layers[len(self.layers)-1])
             pred = self.x_fitted_test.mean(axis = 1)
         return pred
         
    
-
-meta = stacked_generalizer(x_test = x_test, layers = layers, CV = StratifiedKFold(Y_dev, 2))
-#meta.fit_layer(Y_dev, x_dev, x_test, layers[0])
-meta.fit(Y_dev, x_dev)
-pred = meta.predict_proba(x_test)
-
-
-score = metrics.roc_auc_score(Y_test, pred)
-print metrics.roc_auc_score.__name__, ':', score
-    
-single = layers[2][0].fit(x_dev, Y_dev)
-predi = single.predict_proba(x_test)[:, 1]
-
-score = metrics.roc_auc_score(Y_test, predi)
-print metrics.roc_auc_score.__name__, ':', score
 
 
     
