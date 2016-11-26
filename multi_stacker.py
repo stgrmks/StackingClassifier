@@ -8,10 +8,11 @@ Created on Thu Nov 24 12:31:31 2016
 
 import numpy as np
 import pandas as pd
+import matplotlib.pylab as plt
+import seaborn as sns
 
 class stacked_generalizer(object):
-    def __init__(self, x_test, layers = [], CV = []):
-        self.x_test = x_test
+    def __init__(self, layers = [], CV = []):
         self.layers = layers
         self.CV = CV
         
@@ -62,21 +63,29 @@ class stacked_generalizer(object):
         # take the mean of the predictions of the cross validation set
         learner_names = [(type(learner).__name__+str(i)) for i, learner in enumerate(learners)]
         return pd.DataFrame(blend_test, columns = learner_names)
-
     
-    def fit(self, Y_train, x_train):
+    def __get_layer_corr(self, df, layer, plot = False):
+        corr = df.corr()
+        if plot: 
+            ax = plt.axes()            
+            sns.heatmap(corr, xticklabels=corr.columns.values, yticklabels=corr.columns.values, ax = ax)
+            ax.set_title('layer'+str(layer))
+            plt.show()
+
+    def fit(self, x_train, Y_train, x_test, keep_corr = False):
         for i, layer in enumerate(self.layers):
             if i+1 == len(self.layers): # compute every layer except for last one
                 break
             else:
                 print '> layer', i+1
-                layer_train, layer_test = self.__fit_layer_cv(Y_train, x_train, self.x_test, self.layers[i])
-                x_train, self.x_test = layer_train, layer_test
+                layer_train, layer_test = self.__fit_layer_cv(Y_train, x_train, x_test, self.layers[i])
+                if keep_corr: self.__get_layer_corr(layer_train, i+1, plot = True)
+                x_train, x_test = layer_train, layer_test
         self.x_fitted_train = x_train
-        self.x_fitted_test = self.x_test
+        self.x_fitted_test = x_test
         self.Y_train = Y_train
     
-    def predict_proba(self, x_test):
+    def predict_proba(self):
         print '> final layer'
         if len(self.layers[len(self.layers)-1]) == 1: # if last layer consist of exactly one learner....
             stacker = self.layers[len(self.layers)-1][0].fit(self.x_fitted_train, self.Y_train)
