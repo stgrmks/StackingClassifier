@@ -6,6 +6,7 @@ Stacked generalization (or stacking) (Wolpert, 1992) is a different way of combi
 2. Train several base learners on the some parts.
 3. Test the base learners on the left out part.
 4. Using the predictions from 3) as the inputs, and the correct responses as the outputs, train a higher level learner.
+5. Repeat procedure for arbitrary levels.
 
 Note that steps 1) to 3) are the same as cross-validation, but instead of using a winner-takes-all approach, we combine the base learners, possibly nonlinearly.
 
