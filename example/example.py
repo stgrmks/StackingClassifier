@@ -42,16 +42,16 @@ layers = [
             [
             RandomForestClassifier(n_estimators = 120, max_features = 0.95, criterion = 'entropy', max_depth = 10, class_weight = 'balanced', n_jobs = -1, random_state = None),
             RandomForestClassifier(n_estimators = 120, max_features = 0.95, criterion = 'entropy', max_depth = 15, class_weight = 'balanced', n_jobs = -1, random_state = None),
-            xgb.XGBClassifier(colsample_bytree = 0.85, learning_rate = 0.1, min_child_weight = 2, n_estimators = 4, subsample = 0.7, max_depth = 10, base_score = prior, missing = 6666666),
+            xgb.XGBClassifier(colsample_bytree = 0.85, learning_rate = 0.1, min_child_weight = 2, n_estimators = 80, subsample = 0.7, max_depth = 10, base_score = prior, missing = 6666666),
             ],
             [
-           # RandomForestClassifier(n_estimators = 1, max_features = 0.95, criterion = 'entropy', max_depth = 5, class_weight = 'balanced', n_jobs = -1, random_state = None),
+            RandomForestClassifier(n_estimators = 1, max_features = 0.95, criterion = 'entropy', max_depth = 5, class_weight = 'balanced', n_jobs = -1, random_state = None),
             xgb.XGBClassifier(colsample_bytree = 0.85, learning_rate = 0.1, min_child_weight = 2.0, n_estimators = 100, subsample = 0.7, max_depth = 12, base_score = prior, missing = 6666666),
             ],   
-#            [
-#            #ExtraTreesClassifier(max_features = 0.95, n_estimators = 2, criterion = 'entropy', max_depth = 12, class_weight = 'balanced', n_jobs = -1, random_state = None),
-#            xgb.XGBClassifier(colsample_bytree = 0.85, learning_rate = 0.1, min_child_weight = 2.0, n_estimators = 5, subsample = 0.7, max_depth = 2, base_score = prior, missing = 6666666),
-#            ]   
+            [
+            ExtraTreesClassifier(max_features = 0.95, n_estimators = 2, criterion = 'entropy', max_depth = 12, class_weight = 'balanced', n_jobs = -1, random_state = None),
+            xgb.XGBClassifier(colsample_bytree = 0.85, learning_rate = 0.1, min_child_weight = 2.0, n_estimators = 5, subsample = 0.7, max_depth = 2, base_score = prior, missing = 6666666),
+            ]   
         ]
 
 meta = stacked_generalizer(x_test = x_test, layers = layers, CV = StratifiedKFold(Y_dev, 2))
@@ -62,9 +62,5 @@ pred = meta.predict_proba(x_test)
 score = metrics.roc_auc_score(Y_test, pred)
 print metrics.roc_auc_score.__name__, ':', score
     
-single = layers[1][0].fit(x_dev, Y_dev)
-predi = single.predict_proba(x_test)[:, 1]
 
-score = metrics.roc_auc_score(Y_test, predi)
-print metrics.roc_auc_score.__name__, ':', score
 
