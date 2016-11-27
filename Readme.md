@@ -10,22 +10,7 @@ Stacked generalization (or stacking) (Wolpert, 1992) is a different way of combi
 
 Note that steps 1) to 3) are the same as cross-validation, but instead of using a winner-takes-all approach, we combine the base learners, possibly nonlinearly.
 
-## Getting Started
 
-Simply copy the folder into your working directory and import the class. See example.
-
-### Prerequisites
-
-What things you need to install the software and how to install them
-
-```
-Pandas
-Numpy
-```
-
-## Example
-
-A kaggle competition dataset was used to show the implementation of a multilevel stacker.
 
 
 
