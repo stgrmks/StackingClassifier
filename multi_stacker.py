@@ -50,9 +50,9 @@ class stacked_generalizer(object):
     
     def __fit_layer(self, Y_dev, x_dev, x_test, learners):
         # pre-allocate the data
-        blend_test = np.zeros((x_test.shape[0], len(learners))) # Number of testing data x Number of classifiers
+        blend_test = np.zeros((x_test.shape[0], len(learners))) # Number of testing data x number of learners
         
-        # each classifier will be trained and used for predicting test set
+        # each learner will be trained and used for predicting test set
         for j, learner in enumerate(learners):
             print '>> model', j+1, type(learner).__name__
                    
