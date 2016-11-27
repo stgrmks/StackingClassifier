@@ -63,23 +63,19 @@ class stacked_generalizer(object):
         # take the mean of the predictions of the cross validation set
         learner_names = [(type(learner).__name__+str(i)) for i, learner in enumerate(learners)]
         return pd.DataFrame(blend_test, columns = learner_names)
-    
-    def __get_layer_corr(self, df, layer, plot = False):
-        corr = df.corr()
-        if plot: 
-            ax = plt.axes()            
-            sns.heatmap(corr, xticklabels=corr.columns.values, yticklabels=corr.columns.values, ax = ax)
-            ax.set_title('layer'+str(layer))
-            plt.show()
 
     def fit(self, x_train, Y_train, x_test, keep_corr = False):
+        self.corrs = None
+        if keep_corr: 
+            self.corrs = {}
         for i, layer in enumerate(self.layers):
             if i+1 == len(self.layers): # compute every layer except for last one
                 break
             else:
                 print '> layer', i+1
                 layer_train, layer_test = self.__fit_layer_cv(Y_train, x_train, x_test, self.layers[i])
-                if keep_corr: self.__get_layer_corr(layer_train, i+1, plot = True)
+                if keep_corr: 
+                    self.corrs['layer'+str(i+1)] = layer_train.corr()
                 x_train, x_test = layer_train, layer_test
         self.x_fitted_train = x_train
         self.x_fitted_test = x_test
@@ -96,7 +92,18 @@ class stacked_generalizer(object):
             self.x_fitted_test = self.__fit_layer(self.Y_train, self.x_fitted_train, self.x_fitted_test, self.layers[len(self.layers)-1])
             pred = self.x_fitted_test.mean(axis = 1)
         return pred
-        
+    
+    def layer_corr(self, size = 5):
+        if self.corrs is None:
+            print 'correlations not stored during training!'
+        else:
+            for i, k in enumerate(self.corrs.keys()):
+                fig, ax = plt.subplots(figsize=(size, size))
+                sns.heatmap(self.corrs[k], xticklabels = self.corrs[k].columns.values, yticklabels = self.corrs[k].columns.values, ax = ax)
+                ax.set_title(k)
+                plt.show()
+            return self.corrs
+            
    
 
 
