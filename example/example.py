@@ -67,7 +67,7 @@ pred = meta.predict_proba()
 score = metrics.roc_auc_score(Y_test, pred)
 print metrics.roc_auc_score.__name__, ':', score
 
-model_correlation_by_layer = meta.layer_corr()
+model_correlation_by_layer = meta.layer_corr(size = 5, plot = True)
  
 
 

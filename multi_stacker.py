@@ -93,15 +93,16 @@ class stacked_generalizer(object):
             pred = self.x_fitted_test.mean(axis = 1)
         return pred
     
-    def layer_corr(self, size = 5):
+    def layer_corr(self, size = 5, plot = False):
         if self.corrs is None:
             print 'correlations not stored during training!'
         else:
-            for i, k in enumerate(self.corrs.keys()):
-                fig, ax = plt.subplots(figsize=(size, size))
-                sns.heatmap(self.corrs[k], xticklabels = self.corrs[k].columns.values, yticklabels = self.corrs[k].columns.values, ax = ax)
-                ax.set_title(k)
-                plt.show()
+            if plot:
+                for i, k in enumerate(self.corrs.keys()):
+                    fig, ax = plt.subplots(figsize=(size, size))
+                    sns.heatmap(self.corrs[k], xticklabels = self.corrs[k].columns.values, yticklabels = self.corrs[k].columns.values, ax = ax)
+                    ax.set_title(k)
+                    plt.show()
             return self.corrs
             
    
