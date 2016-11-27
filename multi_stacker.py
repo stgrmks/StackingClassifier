@@ -21,13 +21,13 @@ class stacked_generalizer(object):
         skf = list(self.CV)
         
         # pre-allocate the data
-        blend_train = np.zeros((x_dev.shape[0], len(learners))) # number of training data x number of classifiers
-        blend_test = np.zeros((x_test.shape[0], len(learners))) # number of testing data x number of classifiers
+        blend_train = np.zeros((x_dev.shape[0], len(learners))) # number of training data x number of learners
+        blend_test = np.zeros((x_test.shape[0], len(learners))) # number of testing data x number of learners
         
-        # for each classifier, we train the number of fold times (=len(skf))
+        # for each learner, we train the number of fold times (=len(skf))
         for j, learner in enumerate(learners):
             print '>> model', j+1, type(learner).__name__
-            blend_test_j = np.zeros((x_test.shape[0], len(skf))) # number of testing data x Number of folds , we will take the mean of the predictions later
+            blend_test_j = np.zeros((x_test.shape[0], len(skf))) # number of testing data x number of folds , we will take the mean of the predictions later
             for i, (train_index, cv_index) in enumerate(skf):
                 print '>>>> computing fold', i+1
                 
@@ -35,12 +35,12 @@ class stacked_generalizer(object):
                 x_train = x_dev.iloc[train_index]
                 Y_train = Y_dev.iloc[train_index]
                 x_cv = x_dev.iloc[cv_index]
-                # Y_cv = Y_dev.iloc[cv_index] #could run some diagnostics on performance
+                # Y_cv = Y_dev.iloc[cv_index] # could run some diagnostics on performance
                 
                 learner.fit(x_train, Y_train)
                 
-                # this output will be the basis for our blended classifier to train against,
-                # which is also the output of our classifiers
+                # this output will be the basis for our meta learner to train against,
+                # which is also the output of our learners
                 blend_train[cv_index, j] = learner.predict_proba(x_cv)[:,1]
                 blend_test_j[:, i] = learner.predict_proba(x_test)[:,1]
             # take the mean of the predictions of the cross validation set
