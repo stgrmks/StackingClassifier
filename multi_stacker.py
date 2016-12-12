@@ -35,7 +35,6 @@ class stacked_generalizer(object):
                 x_train = x_dev.iloc[train_index]
                 Y_train = Y_dev.iloc[train_index]
                 x_cv = x_dev.iloc[cv_index]
-                # Y_cv = Y_dev.iloc[cv_index] # could run some diagnostics on performance
                 
                 learner.fit(x_train, Y_train)
                 
@@ -44,7 +43,7 @@ class stacked_generalizer(object):
                 blend_train[cv_index, j] = learner.predict_proba(x_cv)[:,1]
                 blend_test_j[:, i] = learner.predict_proba(x_test)[:,1]
             # take the mean of the predictions of the cross validation set
-            blend_test[:, j] = blend_test_j.mean(1)
+            blend_test[:, j] = blend_test_j.mean(1) 
         learner_names = [(type(learner).__name__+str(i)) for i, learner in enumerate(learners)]
         return pd.DataFrame(blend_train, columns = learner_names), pd.DataFrame(blend_test, columns = learner_names)
     
@@ -60,7 +59,7 @@ class stacked_generalizer(object):
             
             # storing predictions
             blend_test[:, j] = learner.predict_proba(x_test)[:,1]
-        # take the mean of the predictions of the cross validation set
+
         learner_names = [(type(learner).__name__+str(i)) for i, learner in enumerate(learners)]
         return pd.DataFrame(blend_test, columns = learner_names)
 

@@ -6,7 +6,7 @@ Created on Sat Nov 26 13:01:51 2016
 @author: markus
 """
 import sys
-sys.path.append('..') # include higher directory to python modules path
+sys.path.append('..') # include higher directory for module search
 import gc
 import numpy as np
 import pandas as pd
