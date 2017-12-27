@@ -6,7 +6,7 @@ from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels, check_classification_targets
 
 
-class stacker(BaseEstimator, ClassifierMixin):
+class StackingClassifier(BaseEstimator, ClassifierMixin):
 
     def __init__(self, layers = None, skf = None, average = False, verbose = 0):
         self.layers = layers
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     y = pd.read_csv('example/Y.csv.gz', index_col=0)['Response'].astype(np.int8)
 
     from sklearn.model_selection import StratifiedKFold
-    ensemble = stacker(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True))
+    ensemble = StackingClassifier(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True))
     ensemble.fit(X = X.as_matrix()[:5000], y = y.as_matrix()[:5000])
     yhat = ensemble.predict_proba(X.as_matrix()[5000:10000])
 
