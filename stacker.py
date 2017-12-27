@@ -54,7 +54,6 @@ class stacker(ClassifierMixin):
         X_pred = self._iterate_layers(X = X)
         return X_pred
 
-
 if __name__ == '__main__':
     layers = [
         [
