@@ -1,7 +1,6 @@
 __author__ = 'MSteger'
 
 import numpy as np
-
 from sklearn.base import ClassifierMixin
 
 class stacker(ClassifierMixin):
