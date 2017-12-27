@@ -1,10 +1,7 @@
 __author__ = 'MSteger'
 
 import numpy as np
-import pandas as pd
-from xgboost import XGBClassifier
-from sklearn.model_selection import StratifiedKFold
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
+
 from sklearn.base import ClassifierMixin
 
 class stacker(ClassifierMixin):
@@ -55,6 +52,8 @@ class stacker(ClassifierMixin):
         return X_pred
 
 if __name__ == '__main__':
+    from xgboost import XGBClassifier
+    from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
     layers = [
         [
             RandomForestClassifier(n_jobs = -1),
@@ -78,13 +77,15 @@ if __name__ == '__main__':
                     'L3_S38_F3952', 'L1_S24_F1723',
                     ]
 
+    import pandas as pd
     X = pd.read_csv('example/train.csv.gz', usecols=numeric_cols, index_col=0).fillna(6666666).astype(np.float32)
     y = pd.read_csv('example/Y.csv.gz', index_col=0)['Response'].astype(np.int8)
 
+    from sklearn.model_selection import StratifiedKFold
     ensemble = stacker(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True))
     ensemble.fit(X = X.as_matrix()[:5000], y = y.as_matrix()[:5000])
     yhat = ensemble.predict_proba(X.as_matrix()[5000:10000])
+
     from sklearn.metrics import accuracy_score
     print accuracy_score(y[5000:10000], yhat.argmax(axis = 1))
-
     print 'done'
