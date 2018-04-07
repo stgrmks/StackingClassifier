@@ -93,4 +93,3 @@ if __name__ == '__main__':
 
     from sklearn.metrics import accuracy_score
     print 'Accuracy: {}'.format(accuracy_score(y[50000:100000], yhat.argmax(axis = 1)))
-    print 'done'
