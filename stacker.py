@@ -1,7 +1,7 @@
 __author__ = 'MSteger'
 
 import numpy as np
-from sklearn.base import BaseEstimator, ClassifierMixin, MetaEstimatorMixin
+from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.utils.validation import check_X_y, check_array, check_is_fitted
 from sklearn.utils.multiclass import unique_labels, check_classification_targets
 
@@ -20,18 +20,14 @@ class StackingClassifier(BaseEstimator, ClassifierMixin):
         if not self.fitted:
             for i, (train_idx, test_idx) in enumerate(self.skf.split(X, y)):
                 for j, model in enumerate(models):
-                    if self.verbose:print 'bin {}: fitting model {}\n'.format(i, type(model).__name__)
+                    if self.verbose: print 'bin {}: fitting model {}\n'.format(i, type(model).__name__)
                     model.fit(X[train_idx], y[train_idx])
-                    bin_pred = model.predict_proba(X[test_idx])[:, 1:]
-                    layer_pred[test_idx, :, j] = bin_pred
+                    layer_pred[test_idx, :, j] = model.predict_proba(X[test_idx])[:, 1:]
         else:
             for j, model in enumerate(models):
                 if self.verbose: print 'predicting model {}\n'.format(type(model).__name__)
-                bin_pred = model.predict_proba(X)[:, not last_layer:]
-                layer_pred[:, :, j] = bin_pred
-        if self.average or last_layer: layer_pred = layer_pred.mean(axis = -1)
-        if len(layer_pred.shape) > 2: layer_pred = layer_pred.reshape(layer_pred.shape[0], reduce(lambda x, y: x*y, layer_pred.shape[1:]))
-        return layer_pred
+                layer_pred[:, :, j] = model.predict_proba(X)[:, not last_layer:]
+        return layer_pred.mean(axis = -1)
 
     def _iterate_layers(self, X, y = None):
         for i, models in enumerate(self.layers):
@@ -58,8 +54,8 @@ class StackingClassifier(BaseEstimator, ClassifierMixin):
         return X_pred
 
 if __name__ == '__main__':
-    from sklearn.utils.estimator_checks import check_estimator
     from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
+    # from sklearn.utils.estimator_checks import check_estimator
     # check_estimator(stacker) ## currently fails
 
     from xgboost import XGBClassifier
@@ -91,10 +87,10 @@ if __name__ == '__main__':
     y = pd.read_csv('example/Y.csv.gz', index_col=0)['Response'].astype(np.int8)
 
     from sklearn.model_selection import StratifiedKFold
-    ensemble = StackingClassifier(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True))
+    ensemble = StackingClassifier(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True), verbose = 1)
     ensemble.fit(X = X.as_matrix()[:5000], y = y.as_matrix()[:5000])
     yhat = ensemble.predict_proba(X.as_matrix()[5000:10000])
 
     from sklearn.metrics import accuracy_score
-    print accuracy_score(y[5000:10000], yhat.argmax(axis = 1))
+    print 'Accuracy: {}'.format(accuracy_score(y[5000:10000], yhat.argmax(axis = 1)))
     print 'done'
