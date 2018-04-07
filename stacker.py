@@ -88,9 +88,9 @@ if __name__ == '__main__':
 
     from sklearn.model_selection import StratifiedKFold
     ensemble = StackingClassifier(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True), verbose = 1)
-    ensemble.fit(X = X.as_matrix()[:5000], y = y.as_matrix()[:5000])
-    yhat = ensemble.predict_proba(X.as_matrix()[5000:10000])
+    ensemble.fit(X = X.as_matrix()[:50000], y = y.as_matrix()[:50000])
+    yhat = ensemble.predict_proba(X.as_matrix()[50000:100000])
 
     from sklearn.metrics import accuracy_score
-    print 'Accuracy: {}'.format(accuracy_score(y[5000:10000], yhat.argmax(axis = 1)))
+    print 'Accuracy: {}'.format(accuracy_score(y[50000:100000], yhat.argmax(axis = 1)))
     print 'done'
