@@ -27,6 +27,7 @@ class StackingClassifier(BaseEstimator, ClassifierMixin):
             for j, model in enumerate(models):
                 if self.verbose: print 'predicting model {}\n'.format(type(model).__name__)
                 layer_pred[:, :, j] = model.predict_proba(X)[:, not last_layer:]
+
         if self.average_layer_output or last_layer: layer_pred = layer_pred.mean(axis = -1)
         if len(layer_pred.shape) > 2: layer_pred = layer_pred.reshape(layer_pred.shape[0], reduce(lambda x, y: x*y, layer_pred.shape[1:]))
         return layer_pred
@@ -34,7 +35,7 @@ class StackingClassifier(BaseEstimator, ClassifierMixin):
     def _iterate_layers(self, X, y = None):
         for i, models in enumerate(self.layers):
             if self.verbose: print 'layer {}:'.format(i)
-            X = self._fit_layer(X = X, y = y, models = models, last_layer = (i == len(self.layers) - 1))
+            X = self._fit_layer(X = X, y = y, models = models, last_layer = (i == len(self.layers) - 1)*self.is_fitted)
         return X
 
     def fit(self, X, y = None):
