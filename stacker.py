@@ -11,13 +11,13 @@ class StackingClassifier(BaseEstimator, ClassifierMixin):
     def __init__(self, layers = None, skf = None, average_layer_output = False, verbose = 0):
         self.layers = layers
         self.skf = skf
-        self.fitted = False
+        self.is_fitted = False
         self.average_layer_output = average_layer_output
         self.verbose = verbose > 0
 
     def _fit_layer(self, X, y, models, last_layer = False):
         layer_pred = np.zeros((X.shape[0], len(self.classes_) - 1 + last_layer, len(models)))
-        if not self.fitted:
+        if not self.is_fitted:
             for i, (train_idx, test_idx) in enumerate(self.skf.split(X, y)):
                 for j, model in enumerate(models):
                     if self.verbose: print 'bin {}: fitting model {}\n'.format(i, type(model).__name__)
@@ -34,7 +34,7 @@ class StackingClassifier(BaseEstimator, ClassifierMixin):
     def _iterate_layers(self, X, y = None):
         for i, models in enumerate(self.layers):
             if self.verbose: print 'layer {}:'.format(i)
-            X = self._fit_layer(X = X, y = y, models = models, last_layer = (i == len(self.layers) - 1)*self.fitted)
+            X = self._fit_layer(X = X, y = y, models = models, last_layer = (i == len(self.layers) - 1)*self.is_fitted)
         return X
 
     def fit(self, X, y = None):
@@ -42,7 +42,7 @@ class StackingClassifier(BaseEstimator, ClassifierMixin):
         check_classification_targets(y)
         self.classes_ = unique_labels(y)
         self._iterate_layers(X = X, y = y)
-        self.fitted = True
+        self.is_fitted = True
         self.X_, self.y_ = X, y
         return self
 
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     y = pd.read_csv('example/Y.csv.gz', index_col=0)['Response'].astype(np.int8)
 
     from sklearn.model_selection import StratifiedKFold
-    ensemble = StackingClassifier(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True), average_layer_output = True, verbose = 1)
+    ensemble = StackingClassifier(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True), average_layer_output = False, verbose = 1)
     ensemble.fit(X = X.as_matrix()[:50000], y = y.as_matrix()[:50000])
     yhat = ensemble.predict_proba(X.as_matrix()[50000:100000])
 
