@@ -8,11 +8,11 @@ from sklearn.utils.multiclass import unique_labels, check_classification_targets
 
 class StackingClassifier(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, layers = None, skf = None, average = False, verbose = 0):
+    def __init__(self, layers = None, skf = None, average_layer_output = False, verbose = 0):
         self.layers = layers
         self.skf = skf
         self.fitted = False
-        self.average = average
+        self.average_layer_output = average_layer_output
         self.verbose = verbose > 0
 
     def _fit_layer(self, X, y, models, last_layer = False):
@@ -27,7 +27,9 @@ class StackingClassifier(BaseEstimator, ClassifierMixin):
             for j, model in enumerate(models):
                 if self.verbose: print 'predicting model {}\n'.format(type(model).__name__)
                 layer_pred[:, :, j] = model.predict_proba(X)[:, not last_layer:]
-        return layer_pred.mean(axis = -1)
+        if self.average_layer_output or last_layer: layer_pred = layer_pred.mean(axis = -1)
+        if len(layer_pred.shape) > 2: layer_pred = layer_pred.reshape(layer_pred.shape[0], reduce(lambda x, y: x*y, layer_pred.shape[1:]))
+        return layer_pred
 
     def _iterate_layers(self, X, y = None):
         for i, models in enumerate(self.layers):
@@ -87,7 +89,7 @@ if __name__ == '__main__':
     y = pd.read_csv('example/Y.csv.gz', index_col=0)['Response'].astype(np.int8)
 
     from sklearn.model_selection import StratifiedKFold
-    ensemble = StackingClassifier(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True), verbose = 1)
+    ensemble = StackingClassifier(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True), average_layer_output = True, verbose = 1)
     ensemble.fit(X = X.as_matrix()[:50000], y = y.as_matrix()[:50000])
     yhat = ensemble.predict_proba(X.as_matrix()[50000:100000])
 
