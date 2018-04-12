@@ -34,7 +34,7 @@ class StackingClassifier(BaseEstimator, ClassifierMixin):
     def _iterate_layers(self, X, y = None):
         for i, models in enumerate(self.layers):
             if self.verbose: print 'layer {}:'.format(i)
-            X = self._fit_layer(X = X, y = y, models = models, last_layer = (i == len(self.layers) - 1)*self.is_fitted)
+            X = self._fit_layer(X = X, y = y, models = models, last_layer = (i == len(self.layers) - 1))
         return X
 
     def fit(self, X, y = None):
@@ -52,8 +52,7 @@ class StackingClassifier(BaseEstimator, ClassifierMixin):
     def predict_proba(self, X):
         check_is_fitted(self, ['X_', 'y_'])
         X = check_array(X)
-        X_pred = self._iterate_layers(X = X)
-        return X_pred
+        return self._iterate_layers(X = X)
 
 if __name__ == '__main__':
     from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
@@ -89,7 +88,7 @@ if __name__ == '__main__':
     y = pd.read_csv('example/Y.csv.gz', index_col=0)['Response'].astype(np.int8)
 
     from sklearn.model_selection import StratifiedKFold
-    ensemble = StackingClassifier(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True), average_layer_output = False, verbose = 1)
+    ensemble = StackingClassifier(layers = layers, skf = StratifiedKFold(n_splits = 2, shuffle = True), average_layer_output = True, verbose = 1)
     ensemble.fit(X = X.as_matrix()[:50000], y = y.as_matrix()[:50000])
     yhat = ensemble.predict_proba(X.as_matrix()[50000:100000])
 
